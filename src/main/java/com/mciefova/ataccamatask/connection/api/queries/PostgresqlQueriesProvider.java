@@ -47,6 +47,8 @@ public class PostgresqlQueriesProvider implements DatabaseQueriesProvider{
         }
     }
 
+
+    //TODO: add security check of parameters
     /**
      * Build select query according to given parameters
      * @param schemaName

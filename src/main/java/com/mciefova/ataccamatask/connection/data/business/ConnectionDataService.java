@@ -1,5 +1,6 @@
 package com.mciefova.ataccamatask.connection.data.business;
 
+import com.mciefova.ataccamatask.connection.data.model.dto.ConnectionEntityDTO;
 import com.mciefova.ataccamatask.security.SecurityService;
 import com.mciefova.ataccamatask.connection.data.business.enums.InfoSize;
 import com.mciefova.ataccamatask.exception.NotFoundException;
@@ -20,24 +21,33 @@ public class ConnectionDataService {
     @Autowired
     private SecurityService securityService;
 
-    public List<ConnectionEntity> listAllConnections(InfoSize infoSize) {
+    @Autowired
+    private ConnectionDTOService connectionDTOService;
+
+    public List<ConnectionEntityDTO> listAllConnections(InfoSize infoSize) {
 
         if (infoSize == InfoSize.SHORT) {
-            return connectionEntityDAO.listAllConnectionsShortInfo();
+            List<ConnectionEntity> loadedConnections = connectionEntityDAO.listAllConnectionsShortInfo();
+            return connectionDTOService.connectionEntityToDtoObject(loadedConnections);
         }
 
         return listAllConnections();
     }
 
 
-    public List<ConnectionEntity> listAllConnections() {
+    public List<ConnectionEntityDTO> listAllConnections() {
         List<ConnectionEntity> connectionList = connectionEntityDAO.listAllConnections();
         maskPasswords(connectionList);
 
-        return connectionList;
+        return connectionDTOService.connectionEntityToDtoObject(connectionList);
     }
 
-    public ConnectionEntity findConnection(String name) {
+    public ConnectionEntityDTO findConnection(String name) {
+
+        return connectionDTOService.connectionEntityToDtoObject(findConnectionEntity(name));
+    }
+
+    public ConnectionEntity findConnectionEntity(String name) {
         ConnectionEntity connection = connectionEntityDAO.findConnection(name);
 
         if (connection == null) {
@@ -47,21 +57,21 @@ public class ConnectionDataService {
         return connection;
     }
 
-    public void createConnection(ConnectionEntity connection) {
+    public void createConnection(ConnectionEntityDTO connection) {
         connection.setPassword(securityService.encryptPassword(connection.getPassword()));
-        connectionEntityDAO.create(connection);
+        connectionEntityDAO.create(connectionDTOService.connectionDtoToEntityObject(connection));
     }
 
     public void deleteConnection(String name) {
         connectionEntityDAO.deleteConnection(name);
     }
 
-    public void deleteConnection(ConnectionEntity connection) {
-        connectionEntityDAO.delete(connection);
+    public void deleteConnection(ConnectionEntityDTO connection) {
+        connectionEntityDAO.delete(connectionDTOService.connectionDtoToEntityObject(connection));
     }
 
-    public void updateConnection(ConnectionEntity connection) {
-        connectionEntityDAO.update(connection);
+    public void updateConnection(ConnectionEntityDTO connection) {
+        connectionEntityDAO.update(connectionDTOService.connectionDtoToEntityObject(connection));
     }
 
     public void updateConnection(Map<String, String> newValuesMap, String name) {

@@ -1,63 +1,21 @@
-package com.mciefova.ataccamatask.connection.data.model.entities;
+package com.mciefova.ataccamatask.connection.data.model.dto;
 
-import org.hibernate.annotations.NaturalId;
 
-import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.io.Serializable;
 import java.util.Objects;
 
-@Entity
-@Table(name = "connection", schema = "public")
-public class ConnectionEntity {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ConnectionEntityDTO implements Serializable {
 
-    @Id
-    @GeneratedValue(generator = "connection_seq")
-    @SequenceGenerator(name = "connection_id_generator", sequenceName = "connection_seq", allocationSize = 1)
-    @Column(name = "id", updatable = false, nullable = false)
     private int id;
-
-    @NaturalId(mutable = true)
-    @Column(name = "name", nullable = false)
     private String name;
-
-    @Column(name = "host", nullable = false)
     private String host;
-
-    @Column(name = "port", nullable = false)
     private String port;
-
-    @Column(name = "database_name", nullable = false)
     private String databaseName;
-
-    @Column(name = "database_type", nullable = false)
     private String databaseType;
-
-    @Column(name = "user_name", nullable = false)
     private String userName;
-
-    @Column(name = "password", nullable = false)
     private String password;
-
-    public ConnectionEntity() {
-    }
-
-    public ConnectionEntity(int id, String name, String host, String port, String databaseName) {
-        this.id = id;
-        this.name = name;
-        this.host = host;
-        this.port = port;
-        this.databaseName = databaseName;
-    }
-
-    public ConnectionEntity(String name, String host, String port, String databaseName, String databaseType, String
-            userName, String password) {
-        this.name = name;
-        this.host = host;
-        this.port = port;
-        this.databaseName = databaseName;
-        this.databaseType = databaseType;
-        this.userName = userName;
-        this.password = password;
-    }
 
     public int getId() {
         return id;
@@ -127,7 +85,7 @@ public class ConnectionEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ConnectionEntity that = (ConnectionEntity) o;
+        ConnectionEntityDTO that = (ConnectionEntityDTO) o;
         return getId() == that.getId() &&
                 Objects.equals(getName(), that.getName()) &&
                 Objects.equals(getHost(), that.getHost()) &&

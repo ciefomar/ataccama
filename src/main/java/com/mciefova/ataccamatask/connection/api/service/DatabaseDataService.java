@@ -1,19 +1,12 @@
 package com.mciefova.ataccamatask.connection.api.service;
 
-import com.mciefova.ataccamatask.connection.api.connection.enums.DatabaseType;
 import com.mciefova.ataccamatask.connection.api.dto.SchemaDTO;
 import com.mciefova.ataccamatask.connection.api.dto.TableColumnDTO;
 import com.mciefova.ataccamatask.connection.api.dto.TableDTO;
 import com.mciefova.ataccamatask.connection.api.queries.DatabaseQueriesProvider;
-import com.mciefova.ataccamatask.connection.api.queries.PostgresqlQueriesProvider;
 import com.mciefova.ataccamatask.connection.api.service.reader.DbInfoReader;
-import com.mciefova.ataccamatask.connection.api.service.reader.postgresql.PostgresqlSchemaInfoReader;
-import com.mciefova.ataccamatask.connection.api.service.reader.postgresql.PostgresqlTableColumnInfoReader;
-import com.mciefova.ataccamatask.connection.api.service.reader.postgresql.PostgresqlTableInfoReader;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.security.InvalidParameterException;
 import java.sql.*;
 import java.util.*;
 
@@ -21,77 +14,84 @@ import java.util.*;
 @Service
 public class DatabaseDataService {
 
-    @Autowired
-    private PostgresqlQueriesProvider postgresqlQueriesProvider;
+    public List<SchemaDTO> listDatabaseSchemas(Connection connection,
+                                               DatabaseQueriesProvider databaseQueriesProvider,
+                                               DbInfoReader<SchemaDTO> schemaInfoReader) throws SQLException {
 
-    @Autowired
-    private PostgresqlSchemaInfoReader postgresqlSchemaInfoReader;
-
-    @Autowired
-    private PostgresqlTableInfoReader postgresqlTableInfoReader;
-
-    @Autowired
-    private PostgresqlTableColumnInfoReader postgresqlTableColumnInfoReader;
-
-    public List<SchemaDTO> listDatabaseSchemas(Connection connection, DatabaseType databaseType) throws SQLException {
-
-        Statement statement = connection.createStatement();
-        ResultSet result = statement.executeQuery(getDatabaseQueriesProvider(databaseType).createListAllSchemasQuery());
-
-        return getSchemaInfoReader(databaseType).readInfo(result);
-    }
-
-    public List<TableDTO> listDatabaseTables(Connection connection, DatabaseType databaseType,
-                                                 String schema) throws SQLException {
-        ResultSet result;
-
-        if (schema.isEmpty()) {
-            Statement statement = connection.createStatement();
-            result = statement.executeQuery(getDatabaseQueriesProvider(databaseType).createListAllTablesQuery());
-        } else {
-            PreparedStatement listTablesFromSchema =
-                    connection.prepareStatement(getDatabaseQueriesProvider(databaseType).createListAllTablesFromSchemaQuery());
-            listTablesFromSchema.setString(1, schema);
-            result = listTablesFromSchema.executeQuery();
+        List<SchemaDTO> loadedSchemas;
+        try(Statement statement = connection.createStatement()) {
+            ResultSet result = statement.executeQuery(databaseQueriesProvider.createListAllSchemasQuery());
+            loadedSchemas = schemaInfoReader.readInfo(result);
         }
 
-        return getTableInfoReader(databaseType).readInfo(result);
+        return loadedSchemas;
     }
 
-    public List<TableColumnDTO> listDatabaseTableColumns(Connection connection, DatabaseType databaseType,
-                                                          String schema, String table) throws SQLException {
-        PreparedStatement listTablesFromSchema =
-                connection.prepareStatement(getDatabaseQueriesProvider(databaseType).createListAllColumnsFromTableQuery());
-        listTablesFromSchema.setString(1, schema);
-        listTablesFromSchema.setString(2, table);
+    public List<TableDTO> listDatabaseTables(Connection connection,
+                                             DatabaseQueriesProvider databaseQueriesProvider,
+                                             DbInfoReader<TableDTO> tableInfoReader,
+                                             String schema) throws SQLException {
 
-        ResultSet result = listTablesFromSchema.executeQuery();
+        List<TableDTO> loadedTables;
+        if (schema.isEmpty()) {
+            try(Statement statement = connection.createStatement()) {
+                ResultSet result = statement.executeQuery(databaseQueriesProvider.createListAllTablesQuery());
+                loadedTables = tableInfoReader.readInfo(result);
+            }
+        } else {
+            try (PreparedStatement listTablesFromSchema =
+                    connection.prepareStatement(databaseQueriesProvider.createListAllTablesFromSchemaQuery())) {
+                listTablesFromSchema.setString(1, schema);
+                ResultSet result = listTablesFromSchema.executeQuery();
+                loadedTables = tableInfoReader.readInfo(result);
+            }
+        }
 
-        return getTableColumnInfoReader(databaseType).readInfo(result);
+        return loadedTables;
     }
 
-    public List<Map<String, String>> loadTableView(Connection connection, DatabaseType databaseType,
+    public List<TableColumnDTO> listDatabaseTableColumns(Connection connection,
+                                                         DatabaseQueriesProvider databaseQueriesProvider,
+                                                         DbInfoReader<TableColumnDTO> tableColumnInfoReader,
+                                                         String schema,
+                                                         String table) throws SQLException {
+
+        List<TableColumnDTO> loadedTableColumns;
+        try(PreparedStatement listTablesFromSchema =
+                connection.prepareStatement(databaseQueriesProvider.createListAllColumnsFromTableQuery())) {
+            listTablesFromSchema.setString(1, schema);
+            listTablesFromSchema.setString(2, table);
+
+            ResultSet result = listTablesFromSchema.executeQuery();
+            loadedTableColumns = tableColumnInfoReader.readInfo(result);
+        }
+
+        return loadedTableColumns;
+    }
+
+    public List<Map<String, String>> loadTableView(Connection connection, DatabaseQueriesProvider databaseQueriesProvider,
                                                    String schema, String table, String columns, String orderBy,
                                                    String limit) throws SQLException {
 
         List<Map<String, String>> recordList = new ArrayList<>();
 
         String sqlQuery = createTableViewQuery(schema, table, columns, orderBy, limit,
-                                               getDatabaseQueriesProvider(databaseType));
+                                               databaseQueriesProvider);
 
-        Statement statement = connection.createStatement();
-        ResultSet result = statement.executeQuery(sqlQuery);
+        try(Statement statement = connection.createStatement()) {
+            ResultSet result = statement.executeQuery(sqlQuery);
 
-        LinkedList<String> columnNames = readResultSetColumnNames(result);
+            LinkedList<String> columnNames = readResultSetColumnNames(result);
 
-        while (result.next()) {
-            LinkedHashMap<String, String> record = new LinkedHashMap<>();
+            while (result.next()) {
+                LinkedHashMap<String, String> record = new LinkedHashMap<>();
 
-            for (String columnName : columnNames) {
-                record.put(columnName, result.getString(columnName));
+                for (String columnName : columnNames) {
+                    record.put(columnName, result.getString(columnName));
+                }
+
+                recordList.add(record);
             }
-
-            recordList.add(record);
         }
 
         return recordList;
@@ -119,61 +119,5 @@ public class DatabaseDataService {
         }
 
         return columnNames;
-    }
-
-    private DatabaseQueriesProvider getDatabaseQueriesProvider (DatabaseType databaseType) {
-
-        switch (databaseType) {
-            case POSTGRESQL:
-                return postgresqlQueriesProvider;
-            case ORACLE:
-                break;
-            case MYSQL:
-                break;
-        }
-
-        throw new InvalidParameterException(String.format("Database type %s not supported", databaseType));
-    }
-
-    private DbInfoReader<SchemaDTO> getSchemaInfoReader (DatabaseType databaseType) {
-
-        switch (databaseType) {
-            case POSTGRESQL:
-                return postgresqlSchemaInfoReader;
-            case ORACLE:
-                break;
-            case MYSQL:
-                break;
-        }
-
-        throw new InvalidParameterException(String.format("Database type %s not supported", databaseType));
-    }
-
-    private DbInfoReader<TableDTO> getTableInfoReader (DatabaseType databaseType) {
-
-        switch (databaseType) {
-            case POSTGRESQL:
-                return postgresqlTableInfoReader;
-            case ORACLE:
-                break;
-            case MYSQL:
-                break;
-        }
-
-        throw new InvalidParameterException(String.format("Database type %s not supported", databaseType));
-    }
-
-    private DbInfoReader<TableColumnDTO> getTableColumnInfoReader (DatabaseType databaseType) {
-
-        switch (databaseType) {
-            case POSTGRESQL:
-                return postgresqlTableColumnInfoReader;
-            case ORACLE:
-                break;
-            case MYSQL:
-                break;
-        }
-
-        throw new InvalidParameterException(String.format("Database type %s not supported", databaseType));
     }
 }

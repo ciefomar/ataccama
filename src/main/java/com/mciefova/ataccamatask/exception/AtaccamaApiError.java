@@ -2,17 +2,17 @@ package com.mciefova.ataccamatask.exception;
 
 public class AtaccamaApiError {
 
-    private String errorMessage;
+    private String message;
 
     public AtaccamaApiError(String errorMessage) {
-        this.errorMessage = errorMessage;
+        this.message = errorMessage;
     }
 
-    public String getErrorMessage() {
-        return errorMessage;
+    public String getMessage() {
+        return message;
     }
 
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

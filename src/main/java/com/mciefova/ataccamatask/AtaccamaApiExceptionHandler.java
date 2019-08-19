@@ -4,6 +4,7 @@ import com.mciefova.ataccamatask.exception.ApiException;
 import com.mciefova.ataccamatask.exception.AtaccamaApiError;
 import com.mciefova.ataccamatask.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -12,9 +13,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class AtaccamaApiExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public AtaccamaApiError handleNotFoundException() {
-        return new AtaccamaApiError("Record not found");
+    public ResponseEntity<AtaccamaApiError> handleNotFoundException() {
+        return new ResponseEntity<>(new AtaccamaApiError("Record not found"), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(ApiException.class)

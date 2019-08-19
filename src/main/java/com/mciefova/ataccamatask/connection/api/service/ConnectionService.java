@@ -1,7 +1,8 @@
 package com.mciefova.ataccamatask.connection.api.service;
 
 import com.mciefova.ataccamatask.connection.api.connection.enums.DatabaseType;
-import com.mciefova.ataccamatask.connection.api.connection.factory.ConnectionFactory;
+import com.mciefova.ataccamatask.connection.api.connection.factory.ConnectionWrapper;
+import com.mciefova.ataccamatask.connection.api.connection.factory.ConnectionWrapperFactory;
 import com.mciefova.ataccamatask.connection.api.controller.converter.DatabaseTypeConverter;
 import com.mciefova.ataccamatask.connection.api.dto.*;
 import com.mciefova.ataccamatask.connection.data.business.ConnectionDataService;
@@ -17,7 +18,7 @@ import java.util.*;
 public class ConnectionService {
 
     @Autowired
-    private ConnectionFactory connectionFactory;
+    private ConnectionWrapperFactory connectionWrapperFactory;
 
     @Autowired
     private ConnectionDataService connectionDataService;
@@ -31,12 +32,15 @@ public class ConnectionService {
 
     public List<SchemaDTO> listDatabaseSchemas(String connectionName) {
 
-        ConnectionEntity connectionData = connectionDataService.findConnection(connectionName);
+        ConnectionEntity connectionData = connectionDataService.findConnectionEntity(connectionName);
         DatabaseType databaseType = databaseTypeConverter.convert(connectionData.getDatabaseType());
 
-        try (Connection connection = connectionFactory.createConnection(connectionData, databaseType)) {
-
-            return databaseDataService.listDatabaseSchemas(connection, databaseType);
+        try {
+            ConnectionWrapper connectionWrapper = connectionWrapperFactory.createConnectionWrapper(connectionData, databaseType);
+            return databaseDataService.listDatabaseSchemas(
+                    connectionWrapper.getConnection(),
+                    connectionWrapper.getDatabaseQueriesProvider(),
+                    connectionWrapper.getSchemaInfoReader());
 
         } catch (SQLException ex) {
             throw new ApiException(ex);
@@ -49,12 +53,18 @@ public class ConnectionService {
 
     public List<TableDTO> listDatabaseTables(String connectionName, String schema) {
 
-        ConnectionEntity connectionData = connectionDataService.findConnection(connectionName);
+        ConnectionEntity connectionData = connectionDataService.findConnectionEntity(connectionName);
         DatabaseType databaseType = databaseTypeConverter.convert(connectionData.getDatabaseType());
 
-        try (Connection connection = connectionFactory.createConnection(connectionData, databaseType)) {
+        try {
+            ConnectionWrapper connectionWrapper =
+                    connectionWrapperFactory.createConnectionWrapper(connectionData, databaseType);
 
-            return databaseDataService.listDatabaseTables(connection, databaseType, schema);
+            return databaseDataService.listDatabaseTables(
+                    connectionWrapper.getConnection(),
+                    connectionWrapper.getDatabaseQueriesProvider(),
+                    connectionWrapper.getTableInfoReader(),
+                    schema);
 
         } catch (SQLException ex) {
             throw new ApiException(ex);
@@ -63,12 +73,19 @@ public class ConnectionService {
     }
 
     public List<TableColumnDTO> listTableColumns(String connectionName, String schema, String table) {
-        ConnectionEntity connectionData = connectionDataService.findConnection(connectionName);
+        ConnectionEntity connectionData = connectionDataService.findConnectionEntity(connectionName);
         DatabaseType databaseType = databaseTypeConverter.convert(connectionData.getDatabaseType());
 
-        try (Connection connection = connectionFactory.createConnection(connectionData, databaseType)) {
+        try {
+            ConnectionWrapper connectionWrapper =
+                    connectionWrapperFactory.createConnectionWrapper(connectionData, databaseType);
 
-            return databaseDataService.listDatabaseTableColumns(connection, databaseType, schema, table);
+            return databaseDataService.listDatabaseTableColumns(
+                    connectionWrapper.getConnection(),
+                    connectionWrapper.getDatabaseQueriesProvider(),
+                    connectionWrapper.getTableColumnInfoReader(),
+                    schema,
+                    table);
 
         } catch (SQLException ex) {
             throw new ApiException(ex);
@@ -78,12 +95,18 @@ public class ConnectionService {
     public List<Map<String, String>> loadTableView(String connectionName, String schema, String table, String columns,
                                                    String orderBy, String limit) {
 
-        ConnectionEntity connectionData = connectionDataService.findConnection(connectionName);
+        ConnectionEntity connectionData = connectionDataService.findConnectionEntity(connectionName);
         DatabaseType databaseType = databaseTypeConverter.convert(connectionData.getDatabaseType());
 
-        try (Connection connection = connectionFactory.createConnection(connectionData, databaseType)) {
+        try {
 
-            return databaseDataService.loadTableView(connection, databaseType, schema, table, columns, orderBy, limit);
+            ConnectionWrapper connectionWrapper =
+                    connectionWrapperFactory.createConnectionWrapper(connectionData, databaseType);
+
+            return databaseDataService.loadTableView(
+                    connectionWrapper.getConnection(),
+                    connectionWrapper.getDatabaseQueriesProvider(),
+                    schema, table, columns, orderBy, limit);
 
         } catch (SQLException ex) {
             throw new ApiException(ex);

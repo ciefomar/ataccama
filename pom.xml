@@ -65,6 +65,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.modelmapper</groupId>
+			<artifactId>modelmapper</artifactId>
+			<version>${model.mapper.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-dbcp</artifactId>
 			<version>${tomcat.dbcp.version}</version>
@@ -75,6 +81,7 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -94,6 +101,7 @@
 		<tomcat.dbcp.version>9.0.1</tomcat.dbcp.version>
 		<junit-jupiter.version>5.5.1</junit-jupiter.version>
 		<junit-jupiter.params.version>5.5.1</junit-jupiter.params.version>
+		<model.mapper.version>2.3.2</model.mapper.version>
 	</properties>
 
 </project>
