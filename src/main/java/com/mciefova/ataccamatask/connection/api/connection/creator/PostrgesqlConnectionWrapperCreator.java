@@ -2,7 +2,7 @@ package com.mciefova.ataccamatask.connection.api.connection.creator;
 
 import com.mciefova.ataccamatask.connection.api.connection.factory.ConnectionWrapper;
 import com.mciefova.ataccamatask.connection.api.connection.url.creator.PostgresqlDatabaseUrlCreator;
-import com.mciefova.ataccamatask.connection.api.queries.DatabaseQueriesProvider;
+import com.mciefova.ataccamatask.connection.api.queries.PostgresqlQueriesProvider;
 import com.mciefova.ataccamatask.connection.api.service.reader.postgresql.PostgresqlSchemaInfoReader;
 import com.mciefova.ataccamatask.connection.api.service.reader.postgresql.PostgresqlTableColumnInfoReader;
 import com.mciefova.ataccamatask.connection.api.service.reader.postgresql.PostgresqlTableInfoReader;
@@ -33,7 +33,7 @@ public class PostrgesqlConnectionWrapperCreator implements ConnectionWrapperCrea
     private PostgresqlTableColumnInfoReader tableColumnInfoReader;
 
     @Autowired
-    private DatabaseQueriesProvider databaseQueriesProvider;
+    private PostgresqlQueriesProvider databaseQueriesProvider;
 
     @Override
     public ConnectionWrapper createConnectioWrapper(ConnectionEntity connectionData) {

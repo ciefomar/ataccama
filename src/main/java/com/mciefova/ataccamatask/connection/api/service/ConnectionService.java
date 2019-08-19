@@ -37,10 +37,7 @@ public class ConnectionService {
 
         try {
             ConnectionWrapper connectionWrapper = connectionWrapperFactory.createConnectionWrapper(connectionData, databaseType);
-            return databaseDataService.listDatabaseSchemas(
-                    connectionWrapper.getConnection(),
-                    connectionWrapper.getDatabaseQueriesProvider(),
-                    connectionWrapper.getSchemaInfoReader());
+            return databaseDataService.listDatabaseSchemas(connectionWrapper);
 
         } catch (SQLException ex) {
             throw new ApiException(ex);
@@ -60,11 +57,7 @@ public class ConnectionService {
             ConnectionWrapper connectionWrapper =
                     connectionWrapperFactory.createConnectionWrapper(connectionData, databaseType);
 
-            return databaseDataService.listDatabaseTables(
-                    connectionWrapper.getConnection(),
-                    connectionWrapper.getDatabaseQueriesProvider(),
-                    connectionWrapper.getTableInfoReader(),
-                    schema);
+            return databaseDataService.listDatabaseTables(connectionWrapper, schema);
 
         } catch (SQLException ex) {
             throw new ApiException(ex);
@@ -81,11 +74,7 @@ public class ConnectionService {
                     connectionWrapperFactory.createConnectionWrapper(connectionData, databaseType);
 
             return databaseDataService.listDatabaseTableColumns(
-                    connectionWrapper.getConnection(),
-                    connectionWrapper.getDatabaseQueriesProvider(),
-                    connectionWrapper.getTableColumnInfoReader(),
-                    schema,
-                    table);
+                    connectionWrapper, schema, table);
 
         } catch (SQLException ex) {
             throw new ApiException(ex);
@@ -103,10 +92,7 @@ public class ConnectionService {
             ConnectionWrapper connectionWrapper =
                     connectionWrapperFactory.createConnectionWrapper(connectionData, databaseType);
 
-            return databaseDataService.loadTableView(
-                    connectionWrapper.getConnection(),
-                    connectionWrapper.getDatabaseQueriesProvider(),
-                    schema, table, columns, orderBy, limit);
+            return databaseDataService.loadTableView(connectionWrapper, schema, table, columns, orderBy, limit);
 
         } catch (SQLException ex) {
             throw new ApiException(ex);

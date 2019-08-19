@@ -1,10 +1,10 @@
 package com.mciefova.ataccamatask.connection.api.service;
 
+import com.mciefova.ataccamatask.connection.api.connection.factory.ConnectionWrapper;
 import com.mciefova.ataccamatask.connection.api.dto.SchemaDTO;
 import com.mciefova.ataccamatask.connection.api.dto.TableColumnDTO;
 import com.mciefova.ataccamatask.connection.api.dto.TableDTO;
 import com.mciefova.ataccamatask.connection.api.queries.DatabaseQueriesProvider;
-import com.mciefova.ataccamatask.connection.api.service.reader.DbInfoReader;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
@@ -14,71 +14,71 @@ import java.util.*;
 @Service
 public class DatabaseDataService {
 
-    public List<SchemaDTO> listDatabaseSchemas(Connection connection,
-                                               DatabaseQueriesProvider databaseQueriesProvider,
-                                               DbInfoReader<SchemaDTO> schemaInfoReader) throws SQLException {
+    public List<SchemaDTO> listDatabaseSchemas(ConnectionWrapper connectionWrapper) throws SQLException {
 
         List<SchemaDTO> loadedSchemas;
-        try(Statement statement = connection.createStatement()) {
-            ResultSet result = statement.executeQuery(databaseQueriesProvider.createListAllSchemasQuery());
-            loadedSchemas = schemaInfoReader.readInfo(result);
+        try (Statement statement = connectionWrapper.getConnection().createStatement()) {
+            ResultSet result = statement.executeQuery(
+                    connectionWrapper.getDatabaseQueriesProvider().createListAllSchemasQuery());
+            loadedSchemas = connectionWrapper.getSchemaInfoReader().readInfo(result);
         }
 
         return loadedSchemas;
     }
 
-    public List<TableDTO> listDatabaseTables(Connection connection,
-                                             DatabaseQueriesProvider databaseQueriesProvider,
-                                             DbInfoReader<TableDTO> tableInfoReader,
+    public List<TableDTO> listDatabaseTables(ConnectionWrapper connectionWrapper,
                                              String schema) throws SQLException {
 
         List<TableDTO> loadedTables;
         if (schema.isEmpty()) {
-            try(Statement statement = connection.createStatement()) {
-                ResultSet result = statement.executeQuery(databaseQueriesProvider.createListAllTablesQuery());
-                loadedTables = tableInfoReader.readInfo(result);
+            try (Statement statement = connectionWrapper.getConnection().createStatement()) {
+                ResultSet result = statement.executeQuery(
+                        connectionWrapper.getDatabaseQueriesProvider().createListAllTablesQuery()
+                );
+                loadedTables = connectionWrapper.getTableInfoReader().readInfo(result);
             }
         } else {
             try (PreparedStatement listTablesFromSchema =
-                    connection.prepareStatement(databaseQueriesProvider.createListAllTablesFromSchemaQuery())) {
+                         connectionWrapper.getConnection().prepareStatement(
+                                 connectionWrapper.getDatabaseQueriesProvider().createListAllTablesFromSchemaQuery())) {
                 listTablesFromSchema.setString(1, schema);
                 ResultSet result = listTablesFromSchema.executeQuery();
-                loadedTables = tableInfoReader.readInfo(result);
+                loadedTables = connectionWrapper.getTableInfoReader().readInfo(result);
             }
         }
 
         return loadedTables;
     }
 
-    public List<TableColumnDTO> listDatabaseTableColumns(Connection connection,
-                                                         DatabaseQueriesProvider databaseQueriesProvider,
-                                                         DbInfoReader<TableColumnDTO> tableColumnInfoReader,
+    public List<TableColumnDTO> listDatabaseTableColumns(ConnectionWrapper connectionWrapper,
                                                          String schema,
                                                          String table) throws SQLException {
 
         List<TableColumnDTO> loadedTableColumns;
-        try(PreparedStatement listTablesFromSchema =
-                connection.prepareStatement(databaseQueriesProvider.createListAllColumnsFromTableQuery())) {
+        try (PreparedStatement listTablesFromSchema =
+                     connectionWrapper.getConnection().prepareStatement(
+                             connectionWrapper.getDatabaseQueriesProvider().createListAllColumnsFromTableQuery())) {
             listTablesFromSchema.setString(1, schema);
             listTablesFromSchema.setString(2, table);
 
             ResultSet result = listTablesFromSchema.executeQuery();
-            loadedTableColumns = tableColumnInfoReader.readInfo(result);
+            loadedTableColumns = connectionWrapper.getTableColumnInfoReader().readInfo(result);
         }
 
         return loadedTableColumns;
     }
 
-    public List<Map<String, String>> loadTableView(Connection connection, DatabaseQueriesProvider databaseQueriesProvider,
+    public List<Map<String, String>> loadTableView(ConnectionWrapper connectionWrapper,
                                                    String schema, String table, String columns, String orderBy,
                                                    String limit) throws SQLException {
 
         List<Map<String, String>> recordList = new ArrayList<>();
 
         String sqlQuery = createTableViewQuery(schema, table, columns, orderBy, limit,
-                                               databaseQueriesProvider);
+                                               connectionWrapper.getDatabaseQueriesProvider()
+        );
 
-        try(Statement statement = connection.createStatement()) {
+        try (Statement statement = connectionWrapper.getConnection().createStatement()) {
             ResultSet result = statement.executeQuery(sqlQuery);
 
             LinkedList<String> columnNames = readResultSetColumnNames(result);
