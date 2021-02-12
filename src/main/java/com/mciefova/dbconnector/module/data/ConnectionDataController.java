@@ -5,6 +5,7 @@ import com.mciefova.dbconnector.module.data.model.dto.ConnectionEntityResponse;
 import com.mciefova.dbconnector.module.data.service.ConnectionDataService;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -36,14 +37,14 @@ public class ConnectionDataController {
     @PostMapping(value = "/connections")
     @ResponseStatus(HttpStatus.CREATED)
     public ConnectionEntityResponse
-            createConnection(@RequestBody ConnectionEntityRequest connection) {
+            createConnection(@Valid @RequestBody ConnectionEntityRequest connection) {
         return connectionDataService.createConnection(connection);
     }
 
     @PutMapping(value = "/connections/{id}")
     public ConnectionEntityResponse
             updateConnection(@PathVariable Long id,
-                             @RequestBody ConnectionEntityRequest connection) {
+                             @Valid @RequestBody ConnectionEntityRequest connection) {
         return connectionDataService.updateConnection(id, connection);
     }
 

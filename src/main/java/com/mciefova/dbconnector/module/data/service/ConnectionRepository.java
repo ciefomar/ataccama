@@ -6,4 +6,8 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface ConnectionRepository extends CrudRepository<ConnectionEntity, Long>{
     Optional<ConnectionEntity> findByName(String name);
+
+    boolean existsByName(String name);
+
+    boolean existsByNameAndIdNot(String name, Long id);
 }

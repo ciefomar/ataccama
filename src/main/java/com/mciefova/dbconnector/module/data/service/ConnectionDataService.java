@@ -5,6 +5,7 @@ import com.mciefova.dbconnector.module.data.InfoSize;
 import com.mciefova.dbconnector.module.data.model.dto.ConnectionEntityRequest;
 import com.mciefova.dbconnector.module.data.model.dto.ConnectionEntityResponse;
 import com.mciefova.dbconnector.module.data.model.entities.ConnectionEntity;
+import com.mciefova.dbconnector.module.data.validator.ConnectionRequestValidator;
 import com.mciefova.dbconnector.security.SecurityService;
 import java.util.List;
 import java.util.Optional;
@@ -20,13 +21,17 @@ public class ConnectionDataService {
 
     private final ConnectionMapper mapper;
 
+    private final ConnectionRequestValidator validator;
+
     @Autowired
     public ConnectionDataService(ConnectionRepository repository,
                                  SecurityService securityService,
-                                 ConnectionMapper mapper) {
+                                 ConnectionMapper mapper,
+                                 ConnectionRequestValidator validator) {
         this.repository = repository;
         this.securityService = securityService;
         this.mapper = mapper;
+        this.validator = validator;
     }
 
     public List<ConnectionEntityResponse>
@@ -42,6 +47,8 @@ public class ConnectionDataService {
 
     public ConnectionEntityResponse
             createConnection(ConnectionEntityRequest connectionDto) {
+        validator.validate(connectionDto);
+
         ConnectionEntity connection = mapper.map(connectionDto);
         connection.setPassword(
                 securityService.encryptPassword(connection.getPassword()));
@@ -52,6 +59,8 @@ public class ConnectionDataService {
 
     public ConnectionEntityResponse
             updateConnection(Long id, ConnectionEntityRequest updateDto) {
+        validator.validate(id, updateDto);
+
         ConnectionEntity original = repository.findById(id)
                 .orElseThrow(NotFoundException::new);
         ConnectionEntity updated

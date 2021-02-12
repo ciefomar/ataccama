@@ -6,6 +6,7 @@ import com.mciefova.dbconnector.module.api.dto.TableColumnDTO;
 import com.mciefova.dbconnector.module.api.dto.TableDTO;
 import com.mciefova.dbconnector.module.api.service.ConnectionService;
 import java.util.Optional;
+import javax.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -82,8 +83,8 @@ public class ConnectionController {
      */
     @RequestMapping(value = "connections/{id}/records")
     public Iterable<Record> loadTableView(@PathVariable Long id,
-                                          @RequestParam String schema,
-                                          @RequestParam String table,
+                                          @NotBlank @RequestParam String schema,
+                                          @NotBlank @RequestParam String table,
                                           @RequestParam Optional<String> orderBy,
                                           @RequestParam Optional<String> limit) {
 

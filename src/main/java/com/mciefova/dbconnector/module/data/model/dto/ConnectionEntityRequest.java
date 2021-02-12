@@ -4,16 +4,31 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.mciefova.dbconnector.DatabaseType;
 import com.mciefova.dbconnector.data.Request;
 import java.util.Objects;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConnectionEntityRequest implements Request {
 
+    @NotBlank(message = "Connection name is mandatory.")
     protected String name;
+
+    @NotBlank(message = "Connection host is mandatory.")
     protected String host;
+
+    @NotBlank(message = "Connection port is mandatory.")
     protected String port;
+
+    @NotBlank(message = "Database name is mandatory.")
     protected String databaseName;
+
+    @NotNull(message = "Database type is mandatory.")
     protected DatabaseType databaseType;
+
+    @NotBlank(message = "User name is mandatory.")
     protected String userName;
+
+    @NotBlank(message = "Password is mandatory.")
     protected String password;
 
     public String getName() {
